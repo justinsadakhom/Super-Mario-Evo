@@ -3,6 +3,8 @@
 
 <br/>
 
+![Example run](.github/demo.gif?raw=true)
+
 **FEATURES**
 
 - Input detection system that registers blocks, enemy sprites, and other obstacles
