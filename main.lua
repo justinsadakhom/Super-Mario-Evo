@@ -809,7 +809,7 @@ end
 
 function sortByDescendingTrueFitness(object)
   table.sort(object, function(a, b)
-      return a.getActualFitness() > b.getActualFitness()
+      return a:getActualFitness() > b:getActualFitness()
     end
   )
 end
@@ -1078,11 +1078,17 @@ function runProgram()
     local species = getSpecies(generation)
     print("No. of species: " .. #species)
     
+    local count = 1
+    
     -- Loop through individuals in generation.
     for i = 1, #species do
       --print("Species #" .. i .. " population: " .. #species[i])
       
       for j = 1, #species[i] do
+        
+        if count % 10 == 0 then
+          print("Current individual: " .. count)
+        end
         
         local rightmost = 0
         local currentFrame = 0
@@ -1126,6 +1132,8 @@ function runProgram()
           currentFrame = currentFrame + 1
           emu.frameadvance()
         end
+        
+        count = count + 1
       end
     end
     
