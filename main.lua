@@ -193,23 +193,22 @@ function Mario:equals(mario)
   return self.distance == mario.distance and self.finishTime == mario.finishTime and self.genome:equals(mario.genome)
 end
 
-function Mario:setDistance()
-  -- Max distance is 4832.
-  self.distance = memory.read_s16_le(0x94)
-end
-
 function Mario:setFinishTime()
   -- Max time is 300.
-  self.finishTime = memory.readbyte(0x0F31) * 100 + memory.readbyte(0x0F32) * 10 + memory.readbyte(0x0F33)
+  if self.distance < 4832 then
+    self.finishTime = 0
+  else
+    self.finishTime = memory.readbyte(0x0F31) * 100 + memory.readbyte(0x0F32) * 10 + memory.readbyte(0x0F33)
+  end
 end
 
 function Mario:evaluateFitness(numSameSpecies)
   -- Square distance to place more emphasis on reaching the end goal.
-  self.fitness = (math.pow(self.distance, 2) + self.finishTime) / numSameSpecies
+  self.fitness = (self.distance + self.finishTime) / numSameSpecies
 end
 
 function Mario:getActualFitness()
-  return math.pow(self.distance, 2) + self.finishTime
+  return self.distance + self.finishTime
 end
 
 -- Genome class.
@@ -896,6 +895,9 @@ function breedNextGeneration(lastGeneration)
   local generation = {}
   sortByDescendingTrueFitness(lastGeneration)
   
+  local copy1 = deepcopy(lastGeneration[1])
+  local copy2 = deepcopy(lastGeneration[2])
+  
   local species = getSpecies(lastGeneration)
   cullPopulation(species)
   local parents = selectParents(species)
@@ -907,10 +909,10 @@ function breedNextGeneration(lastGeneration)
   end
   
   -- The individual with the highest unadjusted fitness is cloned.
-  generation[1] = lastGeneration[1]
-  generation[2] = lastGeneration[2]
+  generation[1] = copy1
+  generation[2] = copy2
   
-  for i = 1, 300 - #generation do
+  for i = 1, MaxPopulation - #generation do
     table.insert(generation, Mario:new(crossover(generation[1], generation[2])))
   end
   
@@ -1077,15 +1079,12 @@ function runProgram()
     
     local species = getSpecies(generation)
     print("No. of species: " .. #species)
-    
     local count = 1
     
     -- Loop through individuals in generation.
     for i = 1, #species do
-      --print("Species #" .. i .. " population: " .. #species[i])
       
       for j = 1, #species[i] do
-        
         if count % 10 == 0 then
           print("Current individual: " .. count)
         end
@@ -1096,11 +1095,6 @@ function runProgram()
         savestate.loadslot(1)
         clearJoypad()
         local network = buildNeuralNetwork(species[i][j].genome)
-        
-        --local neuronKeys = getKeys(species[i][j].genome.genes["neurons"])
-        --print("Number of neurons: " .. #neuronKeys - 177)
-        --local synapseKeys = getKeys(species[i][j].genome.genes["synapses"])
-        --print("Number of synapses: " .. #synapseKeys)
         
         -- Individual plays out their run.
         while true do
@@ -1122,10 +1116,15 @@ function runProgram()
           local timeoutBonus = currentFrame / 4
           
           if timeLeft + timeoutBonus <= 0 then
-            species[i][j]:setDistance()
+            species[i][j].distance = rightmost
             species[i][j]:setFinishTime()
             local numSameSpecies = #species[i]
             species[i][j]:evaluateFitness(numSameSpecies)
+            
+            if species[i][j].distance > 16 then
+              print(species[i][j]:getActualFitness())
+            end
+            
             break
           end
           
