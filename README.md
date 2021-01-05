@@ -15,7 +15,9 @@
 
 **SETUP**
 
-The program requires [Bizhawk emulator][1]. Download and install it.
+The program requires [Bizhawk emulator][1]. Download and install it. You will also need a Super Mario World (USA) ROM for the SNES.
+
+Run the ROM using Bizhawk. Open main.lua in Bizhawk's Lua console.
 
 If you want to run the included unit tests, ensure the script module is included in your LUA path.
 
