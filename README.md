@@ -1,4 +1,4 @@
-# Super Mario World NEAT
+# Super Mario Evo
 > Watch as the program learns how to play Super Mario World!
 
 <br/>
